@@ -1,0 +1,62 @@
+FoodMaterialSpawner
+・[SerializeField]FoodMaterial FoodMaterialPrefab
+・[SerializeField]float interval
+●FoodMaterialを生む
+
+FoodMaterial
+・Kindピーマンタマネギブタトリ
+・boolで刺さったかどうか[getter]
+・const float 落ちる速度
+
+Yakitori
+・State[2]でRawとRoastedとBurnt [getter]　　　片面ずつの肉の状態
+・intでFoodMaterialNum [getter]    　　　     今何個刺さっているか
+・List<Transform>で具材アタッチメントポイント　どこに刺さるか
+・public const intでMaterialMax　　　　　　　　一つの串の最大数
+・const intで焼けるのに必要な時間
+〇OnTriggerEnter
+　当たったオブジェクトをFoodMaterialタグで判定
+　　→FoodMaterialの親を開いているアタッチポイントに
+
+Grill
+・Yakitoriアタッチポイント
+・アタッチされているYakitori[getter]
+〇OnTriggerEnter
+　当たったオブジェクトをYakitoriタグで判定
+　　→当たった焼き鳥の親をアタッチポイントに
+
+Customer
+・オーダー
+　→FoodMaterialのKindリスト
+・ScoreUIへの参照
+・OrderUIへの参照
+●CreateOrder
+　→オーダー作る
+　→OrderUIにオーダーを渡す（OnDecideOrder呼び出し）
+●Start
+　→CreateOrder
+〇OnTriggerEnterで焼き鳥を判定
+　→焼き上がり条件でScoreUiのOnDecideScore呼び出し
+　→CreateOrder
+
+PlayerHand
+・もっているYakitori[getter]
+〇OnTriggerでGrillを判定して、Grillが空だったらYakitoriを複製してわたす
+　→自分のもっているYakitoriを空のYakitoriに
+
+ScoreUI
+・intでScore
+・TextMeshProでScoreを表示するテキスト
+〇OnDecideScore(int score)
+　→Customerから呼び出される
+　→テキスト修正
+
+CustomerOrderUI
+・OrderのIcon[MaterialMax]
+〇OnDecideOrder(FoodMaterial.Kind[MaterialMax] order)
+　→Customerから呼び出される。orderをもとにアイコン変える
+
+ResultUI
+・スコア
+
+TitleUI
