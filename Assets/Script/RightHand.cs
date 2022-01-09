@@ -6,7 +6,9 @@ public class RightHand : MonoBehaviour
 {
     private GameObject mYakitori;　　　  //今持っている焼き鳥
 
-    // Start is called before the first frame update
+    /// <summary>
+    /// 焼き鳥をゲームが始まった時に実体化させる
+    /// </summary>
     void Awake()
     {
         //実体化させる                                     //yakitoriPrefabをロード

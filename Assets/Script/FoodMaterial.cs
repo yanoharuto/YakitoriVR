@@ -4,7 +4,9 @@ using UnityEngine;
 
 public class FoodMaterial : MonoBehaviour
 {
-
+    private const float RoastTime = 10.0f;   //焼けるまでの時間
+    private const float BurntTime = 20.0f;   //焦げるまでの時間
+    private Vector3 Size;
     public Texture[] BakingConditionTexture = new Texture[8];
 
     public enum BakingCondition　//肉の焼け具合
@@ -14,13 +16,18 @@ public class FoodMaterial : MonoBehaviour
         Burnt,
     }
     public BakingCondition[] BakeSideCondition = new BakingCondition[2];//表と裏の焼き具合
-    //時間によって色具合が変わる
-    private Dictionary<float,BakingCondition> BakingConditionMap = new Dictionary<float, BakingCondition>()
+
+    //時間と焼き具合の関係
+    private Dictionary<float, BakingCondition> BakingConditionMap = new Dictionary<float, BakingCondition>()
     {
         {0.0f, BakingCondition.Raw},
-        {20.0f, BakingCondition.Roasted},
-        {30.0f, BakingCondition.Burnt}
+        {RoastTime, BakingCondition.Roasted},
+        {BurntTime, BakingCondition.Burnt}
     };
+
+    /// <summary>
+    /// 焼け具合の初期化と焼けた時のテクスチャを配列に登録
+    /// </summary>
     private void Start()
     {
         BakeSideCondition[0] = BakingCondition.Raw;
@@ -38,11 +45,18 @@ public class FoodMaterial : MonoBehaviour
         BakingConditionTexture[5] = (Texture)Resources.Load("Model/" + FoodName + "/BurntAndRoast" + FoodName + "Texture");
         BakingConditionTexture[6] = (Texture)Resources.Load("Model/" + FoodName + "/Roast" + FoodName + "Texture");
         BakingConditionTexture[7] = (Texture)Resources.Load("Model/" + FoodName + "/Burnt" + FoodName + "Texture");
+
+        Size = this.gameObject.transform.localScale;
     }
+
+    /// <summary>
+    /// 地面に当たると消えます
+    /// </summary>
+    /// <param name="Ground"></param>
     private void OnTriggerEnter(Collider Ground)
     {
-        if(Ground.gameObject.tag=="Ground")
-        { 
+        if (Ground.gameObject.tag == "Ground")
+        {
             Destroy(gameObject);
         }
     }
@@ -50,17 +64,19 @@ public class FoodMaterial : MonoBehaviour
     /// 焼いて色が変わるよ
     /// </summary>
     /// <param name="_GrillTime">焼かれている時間</param>
-    /// <param name="_Turn">ひっくり返された時間</param>
-    public void Roast(float _GrillTime,bool _Turn)
+    /// <param name="_Turn">ひっくり返されたかどうか</param>
+    public void Roast(float _GrillTime, bool _Turn)
     {
         Debug.Log("何色？");
-        if (_Turn)
+
+        //ひっくり返されていて色が変わる時間になったか？
+        if (_Turn && (Mathf.Floor(_GrillTime) == RoastTime || Mathf.Floor(_GrillTime) == BurntTime))
         {
-            BakeSideCondition[0] = BakingConditionMap[_GrillTime];
+            BakeSideCondition[0] = BakingConditionMap[Mathf.Floor(_GrillTime)];
         }
-        else
+        else if (!_Turn && (Mathf.Floor(_GrillTime) == RoastTime || Mathf.Floor(_GrillTime) == BurntTime))
         {
-            BakeSideCondition[1] = BakingConditionMap[_GrillTime];
+            BakeSideCondition[1] = BakingConditionMap[Mathf.Floor(_GrillTime)];
         }
         //半生
         if (BakeSideCondition[0] == BakingCondition.Roasted && BakeSideCondition[0] == BakingCondition.Raw)
@@ -109,5 +125,20 @@ public class FoodMaterial : MonoBehaviour
             Texture NextTexture = this.gameObject.GetComponent<FoodMaterial>().BakingConditionTexture[7];
             this.gameObject.GetComponent<Renderer>().material.mainTexture = NextTexture;
         }
+    }
+
+    public void Turn(bool _Turn)
+    {
+        Vector3 Location = this.gameObject.transform.position;
+        if (_Turn)
+        {
+            Location.y += 0.1f;
+        }
+        else
+        {
+            Location.y -= 0.1f;
+        }  
+        this.transform.LookAt(Location);
+        this.gameObject.transform.localScale = Size;
     }
 }
