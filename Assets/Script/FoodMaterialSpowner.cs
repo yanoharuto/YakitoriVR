@@ -4,26 +4,34 @@ using UnityEngine;
 
 public class FoodMaterialSpowner : MonoBehaviour
 {
-    [SerializeField] GameObject FoodMaterialPrefab;
-    [SerializeField] float teleportX;
-    Vector3 TeleportPosition;
-    float interval = 0;
-    float delta = 0;
+    
+    [SerializeField] GameObject mFoodMaterialPrefab;
+    private Vector3 mTeleportPosition;
+    private float mInterval = 3.0f;
+    private float mDelta = 0;
+    private ObjectPool m_Pool;
+    private const int mFirstFoodObjectCount = 10;
 
     private void Start()
     {
-        TeleportPosition = new Vector3(teleportX, 7f, -0.8f);
+        m_Pool = this.gameObject.GetComponent<ObjectPool>();
+        m_Pool.CreatePool(mFoodMaterialPrefab,mFirstFoodObjectCount);
+        mTeleportPosition = this.gameObject.transform.position;
+        mTeleportPosition.y += 1;
+        mTeleportPosition.z += 1;
     }
-    // Update is called once per frame
+   /// <summary>
+   /// 食べ物を呼び出す
+   /// </summary>
     void Update()
     {
-        this.delta += Time.deltaTime;
-        if (this.delta > this.interval)
+        this.mDelta += Time.deltaTime;
+        if (this.mDelta > this.mInterval) 
         {
-            this.delta = 0;
-            this.interval = Random.Range(1.0f, 3.0f);
-            GameObject Food = Instantiate(FoodMaterialPrefab) as GameObject;
-            Food.transform.position = TeleportPosition;
+            this.mDelta = 0;
+            this.mInterval = Random.Range(1.0f, 3.0f);
+            GameObject Food = m_Pool.GetObject();
+            Food.transform.position = mTeleportPosition;
         }
     }
 }

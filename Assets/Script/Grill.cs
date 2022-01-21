@@ -5,43 +5,72 @@ using UnityEngine;
 public class Grill : MonoBehaviour
 {
     //焼き鳥の設置場所
-    private GameObject mAttachPoint;
-    private Rigidbody mYakitoriRigidbody;
-    private Yakitori mYakitori;
-
+    private Yakitori mYakitoriComponent;
+    private ParticleSystem mFlameParticle;
+    private ParticleSystem mCollisionParticle;
 
     void Start()
     {
-        mAttachPoint = this.gameObject.transform.GetChild(0).gameObject;
+        mFlameParticle = this.gameObject.transform.GetChild(5).gameObject.GetComponent<ParticleSystem>();
+        mFlameParticle.Stop();
+        mCollisionParticle=this.gameObject.transform.GetChild(6).gameObject.GetComponent<ParticleSystem>();
+        mCollisionParticle.Stop();
     }
     
-    //焼き鳥をGrillに親子付け
-    void OnCollisionEnter(Collision _Yakitori)
-    {
-        //to do 焼き鳥が当たったらではなく右手が当たってボタンを押したなら
-        //右手人差し指で焼き鳥を設置OVRInput.GetUp(OVRInput.RawButton.RIndexTrigger) &&
-        if ( _Yakitori.gameObject.CompareTag("Yakitori"))
-        {
-            mYakitoriRigidbody = _Yakitori.gameObject.GetComponent<Rigidbody>();
-            
-            _Yakitori.gameObject.transform.rotation = Quaternion.Euler(0, 0, 270);//横向きに設置
-            //焼き鳥を位置調整     
-            _Yakitori.gameObject.transform.position = mAttachPoint.transform.position;
-        }
-    }
-
     /// <summary>
-    /// 焼き鳥を焼いて色を付ける
+    ///
     /// </summary>
-    /// <param name="_Yakitori">焼き鳥</param>
-    private void OnCollisionStay(Collision _Yakitori)
+    /// <param name="_Other"></param>
+    void OnTriggerStay(Collider _Other)
     {
-        //当たったのがYakitoriなら
-        if (_Yakitori.gameObject.CompareTag("Yakitori"))
-        { 
-            Debug.Log("やいてる");
-            _Yakitori.gameObject.GetComponent<Yakitori>().Roast();
+        //左手で焼きぐしをひっくり返す
+        if (_Other.CompareTag("LeftHand") ) 
+        {
+            if(mYakitoriComponent) //(OVRInput.GetUp(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.LTouch))
+            {
+                //初めてひっくり返すとき
+                mYakitoriComponent.Turn();
+                
+                if (mYakitoriComponent._state == Yakitori.state.Cooked)
+                {
+                    //焼き鳥の調理を終える
+                    mYakitoriComponent = null;
+                    mFlameParticle.Stop();
+                }
+            }
+        }
+        //右手に当たったなら光る
+        if (_Other.gameObject.CompareTag("RightHand"))
+        {
+            if (!mCollisionParticle.isPlaying)
+            {
+                mCollisionParticle.Play();
+            }
+        }
+        //当たったのがYakitoriで
+        if (_Other.gameObject.CompareTag("Yakitori"))
+        {
+            
+            if (_Other.gameObject.transform.parent == null &&　//焼き鳥の串を持っていなくて
+                mYakitoriComponent == null &&　　　　　　　　　//Grillに何も乗っておらず
+                _Other.gameObject.GetComponent<Yakitori>().mFoodMaterialList.Count == 4)//焼き鳥に具が四つ刺さっている
+            {
+                mYakitoriComponent = _Other.gameObject.GetComponent<Yakitori>();
+                mYakitoriComponent.Roast();
+                //炎を出す
+                if (!mFlameParticle.isPlaying)
+                {
+                    mFlameParticle.Play();
+                }
+            }
         }
     }
 
+    private void OnTriggerExit(Collider _Hand)
+    {
+        if (_Hand.gameObject.CompareTag("RightHand"))
+        { 
+            mCollisionParticle.Stop();
+        }
+    }
 }

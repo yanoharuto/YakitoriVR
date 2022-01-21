@@ -8,6 +8,9 @@ TagManager:
   - Yakitori
   - FoodMaterial
   - Grill
+  - Customer
+  - LeftHand
+  - RightHand
   layers:
   - Default
   - TransparentFX
